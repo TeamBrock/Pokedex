@@ -104,6 +104,7 @@ void PokedexScreen::handleEvent(const SDL_Event &sdlEvent)
 
 PokedexScreen::~PokedexScreen()
 {
+	TTF_CloseFont(m_font);
 }
 
 void PokedexScreen::frameStep(unsigned long)
