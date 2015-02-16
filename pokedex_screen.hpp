@@ -20,7 +20,7 @@ public:
 
 private:
 	imgui::UIState m_userInterface;
-	TTF_Font *m_font;
+	TTF_Font *m_font = nullptr;
 	SDL_Texture *m_textTexture = nullptr;
 	PokemonData m_pokeData;
 	std::string m_textField;
