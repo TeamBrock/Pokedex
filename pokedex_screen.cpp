@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <regex>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -52,6 +53,7 @@ struct PokemonIndex {
 	int baseDef;
 	int baseSpAtt;
 	int baseSpDef;
+	int textDistance;
 
 	std::string name;
 	std::string imagePath;
@@ -70,7 +72,7 @@ class Pokedex : public Gwen::Controls::Base
 {
 public:
 
-    Pokedex(Gwen::Controls::Base *pParent, PokemonData &pokeData, const Gwen::String& name = "")
+    Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name = "")
 		: Gwen::Controls::Base(pParent, name)
     {
 		SetSize(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -80,19 +82,14 @@ public:
 			textBox->SetPos(5, 70);
 			textBox->SetSize(WINDOW_WIDTH/4, 40);
 			textBox->SetText("");
+			textBox->onTextChanged.Add(this, &Pokedex::onText);
 		}
 
 		{
 			listBox = new Gwen::Controls::ListBox(this);
 			listBox->SetPos(textBox->GetPos().x, textBox->GetPos().y + textBox->Height() + 25);
 			listBox->SetSize(WINDOW_WIDTH/4, WINDOW_HEIGHT-150-5);
-
-			for (int i = 1, totalPokemon = pokeData.numPokemon(); i <= totalPokemon; ++i) {
-				pokeData.setPokemon(i);
-				pokemonList.push_back(PokemonIndex(pokeData));
-				pokemonList[i-1].tableRow = listBox->AddItem(pokemonList[i-1].name);
-			}
-
+			initPokemonList();
 			listBox->SelectByString(pokemonList[0].name);
             listBox->onRowSelected.Add(this, &Pokedex::rowSelected);
 		}
@@ -131,6 +128,20 @@ public:
 
 		setPokemon(1);
     }
+
+	void initPokemonList()
+	{
+		for (int i = 1, totalPokemon = pokeData.numPokemon(); i <= totalPokemon; ++i) {
+			pokeData.setPokemon(i);
+			pokemonList.push_back(PokemonIndex(pokeData));
+			pokemonList[i-1].tableRow = listBox->AddItem(pokemonList[i-1].name);
+		}
+	}
+
+	void addPokemonToList(int id)
+	{
+		pokemonList[id].tableRow = listBox->AddItem(pokemonList[id].name);
+	}
 
 	void addRow(const std::string &first, const std::string &second)
 	{
@@ -175,7 +186,32 @@ public:
 		}
 
 		setPokemon(id);
-    }
+	}
+
+	void onText(Gwen::Controls::Base *pControl)
+	{
+		Gwen::Controls::TextBox *ctrl = static_cast<Gwen::Controls::TextBox *>(pControl);
+		listBox->Clear();
+		std::vector<PokemonIndex *> matches;
+		std::string query = ctrl->GetText();
+		if (query.size() == 0) {
+			// add back all entries
+			for (int i = 0; i < pokemonList.size(); ++i) {
+				addPokemonToList(i);
+			}
+		} else { // valid query
+			std::regex self_regex(query, std::regex_constants::ECMAScript | std::regex_constants::icase);
+			for (auto &index : pokemonList) {
+				if (std::regex_search(index.name, self_regex)) {
+					matches.push_back(&index);
+				}
+			}
+			// add matches
+			for (auto index : matches) {
+				addPokemonToList(index->id - 1);
+			}
+		}
+	}
 
 	Gwen::Controls::ImagePanel *imgPanel;
 	Gwen::Controls::ListBox *listBox;
@@ -184,6 +220,7 @@ public:
 	Gwen::Controls::Layout::Table* table;
 	Gwen::Controls::Label *flavorLabel;
 
+	PokemonData pokeData;
 	std::vector<PokemonIndex> pokemonList;
 };
 
@@ -209,7 +246,7 @@ bool PokedexScreen::initialize(RenderContext *context, ScreenDispatcher *dispatc
     m_gwenCanvas->SetBackgroundColor(Gwen::Color(150, 170, 170, 255));
 
     // Create our unittest control (which is a Window with controls in it)
-    m_pokedexBase = new Pokedex(m_gwenCanvas, m_pokeData);
+    m_pokedexBase = new Pokedex(m_gwenCanvas);
     m_gwenInput.Initialize(m_gwenCanvas);
 
 	return true;
