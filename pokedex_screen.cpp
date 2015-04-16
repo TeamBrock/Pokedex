@@ -87,7 +87,7 @@ public:
 
 		{
 			listBox = new Gwen::Controls::ListBox(this);
-			listBox->SetPos(textBox->GetPos().x, textBox->GetPos().y + textBox->Height() + 25);
+			listBox->SetPos(textBox->GetPos().x, textBox->GetPos().y + textBox->Height() + 40);
 			listBox->SetSize(WINDOW_WIDTH/4, WINDOW_HEIGHT-150-5);
 			initPokemonList();
 			listBox->SelectByString(pokemonList[0].name);
