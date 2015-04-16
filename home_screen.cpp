@@ -75,6 +75,11 @@ bool HomeScreen::initialize(RenderContext *context, ScreenDispatcher *dispatcher
 	return true;
 }
 
+void HomeScreen::onEnter()
+{
+	SDL_SetRenderDrawColor(m_context->renderer, 75, 67, 142, 255);
+}
+
 void HomeScreen::handleEvent(const SDL_Event &sdlEvent)
 {
 	m_userInterface.handleEvent(sdlEvent);

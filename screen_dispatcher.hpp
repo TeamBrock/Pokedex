@@ -15,6 +15,7 @@ public:
 	bool initialize();
 	void setToPokedexScreen();
 	void tick();
+	void switchScreen(unsigned int id);
 
 private:
 	std::vector<std::unique_ptr<Screen>> m_screens;

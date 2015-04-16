@@ -20,6 +20,7 @@ public:
 	}
 	virtual void handleEvent(const SDL_Event &) {}
 	virtual void frameStep(unsigned long tickMS) = 0;
+	virtual void onEnter() {};
 
 protected:
 	RenderContext *m_context;
