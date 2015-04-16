@@ -17,9 +17,15 @@
 #include "Gwen/Controls/TextBox.h"
 #include "Gwen/Controls/ImagePanel.h"
 #include "Gwen/Controls/GroupBox.h"
+#include "Gwen/Controls/CheckBox.h"
 
 using options::WINDOW_WIDTH;
 using options::WINDOW_HEIGHT;
+
+const char pokedexFont[] = "assets/DroidSansMono.ttf";
+const int bigFont = 18;
+const int mediumFont = 16;
+const int smallFont = 12;
 
 struct PokemonIndex {
 	PokemonIndex(PokemonData &pokeData)
@@ -43,6 +49,8 @@ struct PokemonIndex {
 		doubleResistantTo = pokeData.getTypesDoubleResistantTo();
 		immuneTo = pokeData.getTypesImmuneTo();
 		normalTo = pokeData.getTypesDamagedNormallyBy();
+		type1 = pokeData.getTypeID1();
+		type2 = pokeData.getTypeID2();
 	}
 
 	Gwen::Controls::Layout::TableRow* tableRow;
@@ -54,6 +62,8 @@ struct PokemonIndex {
 	int baseSpAtt;
 	int baseSpDef;
 	int textDistance;
+	int type1;
+	int type2;
 
 	std::string name;
 	std::string imagePath;
@@ -79,7 +89,7 @@ public:
 
 		{
 			textBox = new Gwen::Controls::TextBox(this);
-			textBox->SetPos(5, 70);
+			textBox->SetPos(5, 17);
 			textBox->SetSize(WINDOW_WIDTH/4, 40);
 			textBox->SetText("");
 			textBox->onTextChanged.Add(this, &Pokedex::onText);
@@ -87,11 +97,32 @@ public:
 
 		{
 			listBox = new Gwen::Controls::ListBox(this);
-			listBox->SetPos(textBox->GetPos().x, textBox->GetPos().y + textBox->Height() + 40);
-			listBox->SetSize(WINDOW_WIDTH/4, WINDOW_HEIGHT-150-5);
+			listBox->SetPos(textBox->GetPos().x, textBox->GetPos().y + textBox->Height() + 20);
+			listBox->SetSize(WINDOW_WIDTH/4, WINDOW_HEIGHT-300-5);
 			initPokemonList();
 			listBox->SelectByString(pokemonList[0].name);
             listBox->onRowSelected.Add(this, &Pokedex::rowSelected);
+		}
+
+		{
+			int x = listBox->GetPos().x;
+			int y = listBox->GetPos().y + listBox->Height() + 10;
+
+			for (int i = 1; i <= pokeData.numTypes(); ++i) {
+				auto check = new Gwen::Controls::CheckBoxWithLabel(this);
+				check->SetPos(x, y);
+				std::string name = pokeData.getTypeName(i);
+				check->Label()->SetText(name);
+				check->Label()->SetFont(pokedexFont, smallFont, false);
+				check->Checkbox()->onCheckChanged.Add(this, &Pokedex::onTypeFilter);
+				check->Checkbox()->SetName(name);
+				check->Checkbox()->SetChecked(true);
+				y += check->Height() + 2;
+				if (y + check->Height() + 2 > options::WINDOW_HEIGHT) {
+					y = listBox->GetPos().y + listBox->Height() + 10;
+					x += 90;
+				}
+			}
 		}
 
 		{
@@ -105,12 +136,12 @@ public:
 								175);
 			flavorGroup->SetPos(textBox->GetPos().x + textBox->Width() + 5, 10);
 			flavorGroup->SetText("Description");
-			flavorGroup->SetFont("assets/DroidSansMono.ttf", 14, false);
+			flavorGroup->SetFont(pokedexFont, mediumFont, false);
 
 			flavorLabel = new Gwen::Controls::Label(flavorGroup);
 			flavorLabel->Dock(Gwen::Pos::Fill);
 			flavorLabel->SetWrap(true);
-			flavorLabel->SetFont("assets/DroidSansMono.ttf", 14, false);
+			flavorLabel->SetFont(pokedexFont, mediumFont, false);
 		}
 
 		{
@@ -118,7 +149,7 @@ public:
 			groupBox->SetSize(WINDOW_WIDTH - listBox->Width() - 15, WINDOW_HEIGHT - imgPanel->Height() - 10);
 			groupBox->SetPos(listBox->GetPos().x + listBox->Width() + 5,
 						     imgPanel->GetPos().y + imgPanel->Height() + 5);
-			groupBox->SetFont("assets/DroidSansMono.ttf", 14, false);
+			groupBox->SetFont(pokedexFont, mediumFont, false);
 			groupBox->SetText("Stats");
 
 			table = new Gwen::Controls::Layout::Table(groupBox);
@@ -131,6 +162,10 @@ public:
 
 	void initPokemonList()
 	{
+		for (int i = 1; i <= pokeData.numTypes(); ++i) {
+			availableTypes.insert(i);
+		}
+
 		for (int i = 1, totalPokemon = pokeData.numPokemon(); i <= totalPokemon; ++i) {
 			pokeData.setPokemon(i);
 			pokemonList.push_back(PokemonIndex(pokeData));
@@ -154,8 +189,8 @@ public:
 		auto label1 = row->GetCellContents(0);
 		auto label2 = row->GetCellContents(1);
 
-		label1->SetFont("assets/DroidSansMono.ttf", 14, false);
-		label2->SetFont("assets/DroidSansMono.ttf", 14, false);
+		label1->SetFont(pokedexFont, mediumFont, false);
+		label2->SetFont(pokedexFont, mediumFont, false);
 	}
 
 	void setPokemon(int id)
@@ -192,12 +227,18 @@ public:
 	{
 		Gwen::Controls::TextBox *ctrl = static_cast<Gwen::Controls::TextBox *>(pControl);
 		listBox->Clear();
+		filterList(ctrl->GetText());
+	}
+
+	void filterList(const std::string &query)
+	{
 		std::vector<PokemonIndex *> matches;
-		std::string query = ctrl->GetText();
 		if (query.size() == 0) {
 			// add back all entries
 			for (int i = 0; i < pokemonList.size(); ++i) {
-				addPokemonToList(i);
+				if (isAvailableType(pokemonList[i].type1) || isAvailableType(pokemonList[i].type2)) {
+					addPokemonToList(i);
+				}
 			}
 		} else { // valid query
 			std::regex self_regex(query, std::regex_constants::ECMAScript | std::regex_constants::icase);
@@ -208,9 +249,45 @@ public:
 			}
 			// add matches
 			for (auto index : matches) {
-				addPokemonToList(index->id - 1);
+				if (isAvailableType(index->type1) || isAvailableType(index->type2)) {
+					addPokemonToList(index->id - 1);
+				}
 			}
 		}
+	}
+
+	void onTypeFilter(Gwen::Controls::Base *pControl)
+	{
+		auto ctrl = static_cast<Gwen::Controls::CheckBox*>(pControl);
+		listBox->Clear();
+		int typeID = pokeData.getTypeID(ctrl->GetName());
+		if (ctrl->IsChecked()) {
+			addType(typeID);
+		} else {
+			removeType(typeID);
+		}
+		filterList(textBox->GetText());
+	}
+
+	void addType(int type)
+	{
+		availableTypes.insert(type);
+	}
+
+	void removeType(int type)
+	{
+		for (auto it = availableTypes.begin(); it != availableTypes.end();) {
+			if (*it == type) {
+				it = availableTypes.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
+
+	bool isAvailableType(int type)
+	{
+		return std::find(availableTypes.begin(), availableTypes.end(), type) != availableTypes.end();
 	}
 
 	Gwen::Controls::ImagePanel *imgPanel;
@@ -221,6 +298,7 @@ public:
 	Gwen::Controls::Label *flavorLabel;
 
 	PokemonData pokeData;
+	std::set<int> availableTypes;
 	std::vector<PokemonIndex> pokemonList;
 };
 
@@ -238,7 +316,7 @@ bool PokedexScreen::initialize(RenderContext *context, ScreenDispatcher *dispatc
 	m_gwenSkin = new Gwen::Skin::TexturedBase(m_gwenRenderer);
     m_gwenSkin->SetRender(m_gwenRenderer);
     m_gwenSkin->Init("assets/DefaultSkin.png");
-    m_gwenSkin->SetDefaultFont("assets/DroidSansMono.ttf", 20);
+    m_gwenSkin->SetDefaultFont(pokedexFont, bigFont);
     
     m_gwenCanvas = new Gwen::Controls::Canvas(m_gwenSkin);
     m_gwenCanvas->SetSize(WINDOW_WIDTH, WINDOW_HEIGHT);
