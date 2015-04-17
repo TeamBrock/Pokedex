@@ -57,10 +57,10 @@ public:
 	//by default, this structure is initialized to list every pokemon.
 	struct Characteristics
 	{
- 		//ignored if empty
-		std::string nameSubStr;
-		//ignored if empty
-		std::string nameStartsWith;
+		//if true, searches for all pokemon that has every type characteristic you inputed
+		//if false, searches for all pokemon that has at least one of the type characteristics you inputed
+		bool typesUsingAnd = false;
+
 		int baseHPMin = 0;
 		int baseHPMax = -1;
 		int baseAttMin = 0;
@@ -77,11 +77,13 @@ public:
 		double heightMax = -1;
 		double weightMin = 0;
 		double weightMax = -1;
+
+ 		//ignored if empty
+		std::string nameSubStr;
+		//ignored if empty
+		std::string nameStartsWith;
 		//ignored if empty
 		std::vector<int> hasType;
-		//if true, searches for all pokemon that has every type characteristic you inputed
-		//if false, searches for all pokemon that has at least one of the type characteristics you inputed
-		bool typesUsingAnd = false;
 	};
 
 private:

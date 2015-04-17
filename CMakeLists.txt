@@ -40,6 +40,7 @@ ADD_EXECUTABLE(
 	imgui_sdlbackend.cpp
 	home_screen.cpp
 	pokedex_screen.cpp
+	pokedex.cpp
 	sprite.cpp
 	texture.cpp
 	PokemonData.cpp

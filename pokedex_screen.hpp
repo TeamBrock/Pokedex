@@ -28,9 +28,6 @@ public:
 	void setPokedexData(int id);
 
 private:
-	PokemonData m_pokeData;
-	int m_currentPokemonID;
-
 	// GWEN Stuff
 	Gwen::Renderer::SDL2 *m_gwenRenderer = nullptr;
 	Gwen::Controls::Canvas *m_gwenCanvas = nullptr;
