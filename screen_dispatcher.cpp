@@ -1,3 +1,4 @@
+#include <cassert>
 #include "screen_dispatcher.hpp"
 #include "render_context.hpp"
 #include "pokedex_screen.hpp"
@@ -24,7 +25,17 @@ bool ScreenDispatcher::initialize()
 	
 void ScreenDispatcher::setToPokedexScreen()
 {
-	m_currentScreen = POKEDEXSCREEN;
+	switchScreen(POKEDEXSCREEN);
+}
+
+void ScreenDispatcher::switchScreen(unsigned int id)
+{
+	if (id < m_screens.size()) {
+		m_currentScreen = id;
+		m_screens[m_currentScreen]->onEnter();
+	} else {
+		assert(false);
+	}
 }
 
 void ScreenDispatcher::tick()
@@ -39,12 +50,14 @@ void ScreenDispatcher::tick()
 					break;
 				case SDL_KEYDOWN:
 					if (sdlEvent.key.keysym.sym == SDLK_F1) {
-						m_currentScreen = 0;
+						switchScreen(0);
 					} else if (sdlEvent.key.keysym.sym == SDLK_F2) {
-						m_currentScreen = 1;
+						switchScreen(1);
 					}
 					break;
-			}
+				default:
+					break;
+			}	
 
 			m_screens[m_currentScreen]->handleEvent(sdlEvent);
 		}

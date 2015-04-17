@@ -29,15 +29,7 @@ public:
 
 private:
 	PokemonData m_pokeData;
-	std::string m_textField;
-
-	Sprite m_pokemonImage;
-	Sprite m_pokemonName;
-	Sprite m_window;
-	Sprite m_textTest;
-
 	int m_currentPokemonID;
-	int m_totalPokemon = 0;
 
 	// GWEN Stuff
 	Gwen::Renderer::SDL2 *m_gwenRenderer = nullptr;

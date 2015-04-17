@@ -238,12 +238,12 @@ namespace Gwen
             return true;
         }
 
-        bool SDL2::EndContext(Gwen::WindowProvider* pWindow)
+        bool SDL2::EndContext(Gwen::WindowProvider*)
         {
             return true;
         }
 
-        bool SDL2::PresentContext(Gwen::WindowProvider* pWindow)
+        bool SDL2::PresentContext(Gwen::WindowProvider*)
         {
             return true;
         }

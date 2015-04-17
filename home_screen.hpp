@@ -17,6 +17,8 @@ public:
 	bool initialize(RenderContext *context, ScreenDispatcher *dispatcher) override;
 	void handleEvent(const SDL_Event &sdlEvent) override;
 	void frameStep(unsigned long tickMS) override;
+	void onEnter() override;
+
 
 private:
 	bool m_dexDance = false;
