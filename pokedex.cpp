@@ -89,7 +89,7 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	{
 		groupBox = new Gwen::Controls::GroupBox(statsTab);
 		groupBox->SetPos(10, flavorLabel->Height() + flavorLabel->GetPos().y);
-		groupBox->SetSize(WINDOW_WIDTH - tabControl->Width() - 35, statsTab->Height() - flavorLabel->Height() - 15);
+		groupBox->SetSize(WINDOW_WIDTH - tabControl->Width() - 35, statsTab->Height() - flavorLabel->Height() - 20);
 		groupBox->SetFont(pokedexFont, mediumFont, false);
 		groupBox->SetText("Stats");
 		groupBox->SetShouldDrawBackground(true);
@@ -128,8 +128,10 @@ void Pokedex::addRow(const std::string &first, const std::string &second)
 	auto label1 = row->GetCellContents(0);
 	auto label2 = row->GetCellContents(1);
 
-	label1->SetFont(pokedexFont, mediumFont, false);
-	label2->SetFont(pokedexFont, mediumFont, false);
+	label1->SetWrap(true);
+	label1->SetFont(pokedexFont, smallFont, false);
+	label2->SetFont(pokedexFont, smallFont, false);
+	label2->SetWrap(true);
 }
 
 template <typename T>
@@ -143,6 +145,10 @@ std::string toStringWithPrecision(const T a_value, const int n = 6)
 void Pokedex::setPokemon(int id)
 {
 	pokeData.setPokemon(id);
+	if (pokeData.getTypesWeakTo().size()) {
+		std::cout << "has types weak to\n";
+	}
+
 	imgPanel->SetImage(pokeData.getSpriteLocation());
 	flavorLabel->SetText(pokeData.getFlavorText());
 	table->Clear();
@@ -156,6 +162,63 @@ void Pokedex::setPokemon(int id)
 	addRow("Base Def", std::to_string(pokeData.getBaseDef()));
 	addRow("Base Sp. Def", std::to_string(pokeData.getBaseSpDef()));
 	addRow("Base Sp. Def", std::to_string(pokeData.getBaseSpDef()));
+
+	std::vector<int> typesWeakTo = pokeData.getTypesWeakTo();
+	std::vector<int> typesDoubleWeakTo = pokeData.getTypesDoubleWeakTo();
+	std::vector<int> typesResistantTo  = pokeData.getTypesResistantTo();
+	std::vector<int> typesDoubleResistantTo = pokeData.getTypesDoubleResistantTo();
+	std::vector<int> typesImmuneTo = pokeData.getTypesImmuneTo();
+	std::vector<int> typesDamagedNormallyBy = pokeData.getTypesDamagedNormallyBy();
+
+	std::string strWeakTo;
+	std::string strDoubleWeakTo;
+	std::string strResistantTo;
+	std::string strDoubleResistantTo;
+	std::string strImmuneTo;
+	std::string strDamagedNormallyBy;
+
+	auto processType = [](std::string &str, std::vector<int> &types, PokemonData &data) {
+		size_t length = types.size();
+		size_t index = 0;
+		for (auto type : types) {
+			str.append(data.getTypeName(type));
+			if (index != length - 1) {
+				str.append(", ");
+			}
+			++index;
+		}
+	};
+
+	processType(strWeakTo, typesWeakTo, pokeData);
+	processType(strDoubleWeakTo, typesDoubleWeakTo, pokeData);
+	processType(strResistantTo, typesResistantTo, pokeData);
+	processType(strDoubleResistantTo, typesDoubleResistantTo, pokeData);
+	processType(strImmuneTo, typesImmuneTo, pokeData);
+	processType(strDamagedNormallyBy, typesDamagedNormallyBy, pokeData);
+
+	if (strWeakTo.size()) {
+		addRow("Types weak to", strWeakTo);
+	}
+
+	if (strDoubleWeakTo.size()) {
+		addRow("Types double weak to", strDoubleWeakTo);
+	}
+
+	if (strResistantTo.size()) {
+		addRow("Types resistant to", strResistantTo);
+	}
+
+	if (strDoubleResistantTo.size()) {
+		addRow("Types double resistant to", strDoubleResistantTo);
+	}
+
+	if (strImmuneTo.size()) {
+		addRow("Types immune to", strImmuneTo);
+	}
+
+	if (strDamagedNormallyBy.size()) {
+		addRow("Types damaged normally by", strDamagedNormallyBy);
+	}
 }
 
 void Pokedex::onRowSelected(Gwen::Controls::Base* pControl)

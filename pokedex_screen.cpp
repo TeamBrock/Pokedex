@@ -34,6 +34,7 @@ static inline void createGridSurface(SDL_Surface *screen, Uint32 color, int size
 		}     
 	}
 }
+
 static SDL_Rect gridRect;
 
 bool PokedexScreen::initialize(RenderContext *context, ScreenDispatcher *dispatcher)
