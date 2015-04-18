@@ -1,4 +1,4 @@
-#include <regex>
+#include <iostream>
 #include "pokedex.hpp"
 #include "Gwen/Controls/CollapsibleList.h"
 
@@ -9,8 +9,8 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 
 	{
 		tabControl = new Gwen::Controls::TabControl(this);
-		tabControl->SetPos(0, 0);
-		tabControl->SetBounds(0, 0, WINDOW_WIDTH/4, WINDOW_HEIGHT - 5);
+		int y = 80;
+		tabControl->SetBounds(5, y, WINDOW_WIDTH/4, WINDOW_HEIGHT - y - 5);
 	}
 
 	Gwen::Controls::TabButton* basicButton = tabControl->AddPage("Basic");
@@ -60,31 +60,29 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	}
 
 	{
-		imgPanel= new Gwen::Controls::ImagePanel(this);
-		imgPanel->SetBounds((WINDOW_WIDTH - tabControl->GetPos().x + tabControl->Width())/2, 0, 200, 200);
+		imgPanel = new Gwen::Controls::ImagePanel(this);
+		imgPanel->SetBounds((WINDOW_WIDTH - tabControl->Width())/2 + 100, 0, 200, 200);
 	}
 
-	{
-		auto flavorGroup = new Gwen::Controls::GroupBox(this);
-		flavorGroup->SetSize(imgPanel->GetPos().x - 5 - (tabControl->GetPos().x + tabControl->Width()),
-							175);
-		flavorGroup->SetPos(tabControl->GetPos().x + tabControl->Width() + 5, 10);
-		flavorGroup->SetText("Description");
-		flavorGroup->SetFont(pokedexFont, mediumFont, false);
+	auto statsTab = new Gwen::Controls::TabControl(this);
+	statsTab->SetSize(WINDOW_WIDTH - tabControl->Width() - 15, WINDOW_HEIGHT - imgPanel->Height() - 10);
+	statsTab->SetPos(tabControl->GetPos().x + tabControl->Width() + 5, imgPanel->GetPos().y + imgPanel->Height() + 5);
 
-		flavorLabel = new Gwen::Controls::Label(flavorGroup);
-		flavorLabel->Dock(Gwen::Pos::Fill);
+	{
+		flavorLabel = new Gwen::Controls::Label(statsTab);
 		flavorLabel->SetWrap(true);
 		flavorLabel->SetFont(pokedexFont, mediumFont, false);
+		flavorLabel->SetPos(5, 5);
+		flavorLabel->SetSize(statsTab->Width() - 10, 60);
 	}
 
 	{
-		groupBox = new Gwen::Controls::GroupBox(this);
-		groupBox->SetSize(WINDOW_WIDTH - tabControl->Width() - 15, WINDOW_HEIGHT - imgPanel->Height() - 10);
-		groupBox->SetPos(tabControl->GetPos().x + tabControl->Width() + 5,
-						 imgPanel->GetPos().y + imgPanel->Height() + 5);
+		groupBox = new Gwen::Controls::GroupBox(statsTab);
+		groupBox->SetPos(10, flavorLabel->Height() + flavorLabel->GetPos().y);
+		groupBox->SetSize(WINDOW_WIDTH - tabControl->Width() - 35, statsTab->Height() - flavorLabel->Height() - 15);
 		groupBox->SetFont(pokedexFont, mediumFont, false);
 		groupBox->SetText("Stats");
+		groupBox->SetShouldDrawBackground(true);
 
 		table = new Gwen::Controls::Layout::Table(groupBox);
 		table->Dock(Gwen::Pos::Fill);

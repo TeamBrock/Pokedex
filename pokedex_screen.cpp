@@ -65,8 +65,8 @@ bool PokedexScreen::initialize(RenderContext *context, ScreenDispatcher *dispatc
 		0, WINDOW_WIDTH, WINDOW_HEIGHT,
 		32, rmask, gmask, bmask, amask
 	);
-	Uint32 color = SDL_MapRGB(gridSurface->format, 0, 0, 0);
-	createGridSurface(gridSurface, color, WINDOW_WIDTH/40);
+	Uint32 color = SDL_MapRGBA(gridSurface->format, 75, 67, 142, 255);
+	createGridSurface(gridSurface,  color, WINDOW_WIDTH/40);
 	gridTexture = SDL_CreateTextureFromSurface(m_context->renderer, gridSurface);
 	SDL_FreeSurface(gridSurface);
 
