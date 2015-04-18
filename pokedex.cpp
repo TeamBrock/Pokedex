@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include "pokedex.hpp"
 #include "Gwen/Controls/CollapsibleList.h"
 
@@ -39,21 +40,30 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	}
 
 	{
+		auto clearButton = new Gwen::Controls::Button(advancedPage);
+		clearButton->SetPos(0, 0);
+		clearButton->SetSize(40, 20);
+		clearButton->SetText("Clear");
+		clearButton->SetFont(pokedexFont, smallFont, false);
+		clearButton->onPress.Add(this, &Pokedex::onPressClear);
+
+		const int initialY = clearButton->Height() + clearButton->GetPos().y + 5;
+
 		int x = 0;
-		int y = 0;
+		int y = initialY;
 
 		for (size_t i = 1; i <= pokeData.numTypes(); ++i) {
 			auto check = new Gwen::Controls::CheckBoxWithLabel(advancedPage);
+			typeCheckBoxes.push_back(check);
 			check->SetPos(x, y);
 			std::string name = pokeData.getTypeName(i);
 			check->Label()->SetText(name);
 			check->Label()->SetFont(pokedexFont, smallFont, false);
 			check->Checkbox()->onCheckChanged.Add(this, &Pokedex::onTypeFilter);
 			check->Checkbox()->SetName(name);
-			check->Checkbox()->SetChecked(true);
 			y += check->Height() + 2;
-			if (y + check->Height() + 2 > options::WINDOW_HEIGHT) {
-				y = listBox->GetPos().y + listBox->Height() + 10;
+			if (y > (180 + initialY)) {
+				y = initialY;
 				x += 90;
 			}
 		}
@@ -95,12 +105,15 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 void Pokedex::initPokemonList()
 {
 	pokemonFiltered = pokeData.getPokemonWithCharacteristics(characteristics);
-	currentPokemon = pokemonFiltered[0];
-	pokeData.setPokemon(currentPokemon);
+	if (pokemonFiltered.size()) {
+		currentPokemon = pokemonFiltered[0];
+		pokeData.setPokemon(currentPokemon);
 
-	for (const auto &id : pokemonFiltered) {
-		pokeData.setPokemon(id);
-		listBox->AddItem(pokeData.getName());
+		for (const auto &id : pokemonFiltered) {
+			pokeData.setPokemon(id);
+			std::string name = pokeData.getName();
+			listBox->AddItem(name, name);
+		}
 	}
 }
 
@@ -119,16 +132,29 @@ void Pokedex::addRow(const std::string &first, const std::string &second)
 	label2->SetFont(pokedexFont, mediumFont, false);
 }
 
+template <typename T>
+std::string toStringWithPrecision(const T a_value, const int n = 6)
+{
+	std::ostringstream out;
+	out << std::setprecision(n) << a_value;
+	return out.str();
+}
+
 void Pokedex::setPokemon(int id)
 {
 	pokeData.setPokemon(id);
 	imgPanel->SetImage(pokeData.getSpriteLocation());
 	flavorLabel->SetText(pokeData.getFlavorText());
 	table->Clear();
+
+	addRow("Height", toStringWithPrecision(pokeData.getHeight(), 6));
+	addRow("Weight", toStringWithPrecision(pokeData.getWeight(), 6));
+
 	addRow("Base HP", std::to_string(pokeData.getBaseHP()));
 	addRow("Base Attk", std::to_string(pokeData.getBaseAtt()));
 	addRow("Base Sp. Attk", std::to_string(pokeData.getBaseSpAtt()));
 	addRow("Base Def", std::to_string(pokeData.getBaseDef()));
+	addRow("Base Sp. Def", std::to_string(pokeData.getBaseSpDef()));
 	addRow("Base Sp. Def", std::to_string(pokeData.getBaseSpDef()));
 }
 
@@ -175,4 +201,13 @@ void Pokedex::filterList(const std::string &query)
 {
 	characteristics.nameStartsWith = query;
 	initPokemonList();
+	setPokemon(currentPokemon);
+	//listBox->SelectByString(pokeData.getName());
+}
+
+void Pokedex::onPressClear(Gwen::Controls::Base *)
+{
+	for (auto check : typeCheckBoxes) {
+		check->Checkbox()->SetChecked(false);
+	}
 }

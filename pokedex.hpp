@@ -31,6 +31,7 @@ public:
     void onRowSelected(Gwen::Controls::Base* pControl);
 	void onTypeFilter(Gwen::Controls::Base *pControl);
 	void onText(Gwen::Controls::Base *pControl);
+	void onPressClear(Gwen::Controls::Base *);
 
 private:
 	int currentPokemon;
@@ -46,5 +47,6 @@ private:
 	PokemonData pokeData;
 	PokemonData::Characteristics characteristics;
 
+	std::vector<Gwen::Controls::CheckBoxWithLabel *> typeCheckBoxes;
 	std::vector<int> pokemonFiltered;
 };
