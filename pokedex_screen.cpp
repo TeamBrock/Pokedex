@@ -12,9 +12,29 @@
 #include "pokedex_screen.hpp"
 #include "text.hpp"
 #include "pokedex.hpp"
+#include "texture.hpp"
 
 using options::WINDOW_WIDTH;
 using options::WINDOW_HEIGHT;
+
+// Draws a grid to the surface by drawing horizontal and vertical lines with each
+// cell with a width and height of 'size'
+static inline void createGridSurface(SDL_Surface *screen, Uint32 color, int size) {
+	for(int y = 0; y < screen->h; y++) {
+		for (int x = 0; x < screen->w; x++) {
+			if (x % size == 0)
+				putPixel(screen, x, y, color);
+		}     
+	}
+
+	for(int x = 0; x < screen->w; x++) {
+		for (int y = 0; y < screen->h; y++) {
+			if (y % size == 0)
+				putPixel(screen, x, y, color);
+		}     
+	}
+}
+static SDL_Rect gridRect;
 
 bool PokedexScreen::initialize(RenderContext *context, ScreenDispatcher *dispatcher)
 {
@@ -30,12 +50,30 @@ bool PokedexScreen::initialize(RenderContext *context, ScreenDispatcher *dispatc
     
     m_gwenCanvas = new Gwen::Controls::Canvas(m_gwenSkin);
     m_gwenCanvas->SetSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    m_gwenCanvas->SetDrawBackground(true);
-    m_gwenCanvas->SetBackgroundColor(Gwen::Color(150, 170, 170, 255));
+    m_gwenCanvas->SetDrawBackground(false);
+    //m_gwenCanvas->SetBackgroundColor(Gwen::Color(150, 170, 170, 255));
 
     // Create our unittest control (which is a Window with controls in it)
     m_pokedexBase = new Pokedex(m_gwenCanvas);
     m_gwenInput.Initialize(m_gwenCanvas);
+
+
+	// Create grid texture
+	Uint32 gmask, rmask, bmask, amask;
+	getMasks(&gmask, &rmask, &bmask, &amask);
+	SDL_Surface *gridSurface = SDL_CreateRGBSurface(
+		0, WINDOW_WIDTH, WINDOW_HEIGHT,
+		32, rmask, gmask, bmask, amask
+	);
+	Uint32 color = SDL_MapRGB(gridSurface->format, 0, 0, 0);
+	createGridSurface(gridSurface, color, WINDOW_WIDTH/40);
+	gridTexture = SDL_CreateTextureFromSurface(m_context->renderer, gridSurface);
+	SDL_FreeSurface(gridSurface);
+
+	gridRect.x = 0;
+	gridRect.y = 0;
+	gridRect.w = WINDOW_WIDTH;
+	gridRect.h = WINDOW_HEIGHT;
 
 	return true;
 }
@@ -61,7 +99,9 @@ PokedexScreen::~PokedexScreen()
 
 void PokedexScreen::frameStep(unsigned long)
 {
+	SDL_SetRenderDrawColor(m_context->renderer, 255, 255, 255, 255);
 	SDL_RenderClear(m_context->renderer);
+	SDL_RenderCopy(m_context->renderer, gridTexture, nullptr, &gridRect);
 
 	m_gwenRenderer->BeginContext(NULL);
 	m_gwenCanvas->RenderCanvas();

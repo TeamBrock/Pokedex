@@ -1,5 +1,6 @@
 #include <regex>
 #include "pokedex.hpp"
+#include "Gwen/Controls/CollapsibleList.h"
 
 Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 		: Gwen::Controls::Base(pParent, name)
@@ -7,17 +8,29 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	SetSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	{
-		textBox = new Gwen::Controls::TextBox(this);
+		tabControl = new Gwen::Controls::TabControl(this);
+		tabControl->SetPos(0, 0);
+		tabControl->SetBounds(0, 0, WINDOW_WIDTH/4, WINDOW_HEIGHT - 5);
+	}
+
+	Gwen::Controls::TabButton* basicButton = tabControl->AddPage("Basic");
+	Gwen::Controls::TabButton* advancedButton = tabControl->AddPage("Advanced");
+
+	Gwen::Controls::Base* basicPage = basicButton->GetPage();
+	Gwen::Controls::Base* advancedPage = advancedButton->GetPage();
+
+	{
+		textBox = new Gwen::Controls::TextBox(basicPage);
 		textBox->SetPos(5, 17);
-		textBox->SetSize(WINDOW_WIDTH/4, 40);
+		textBox->SetSize(WINDOW_WIDTH/4 - 25, 40);
 		textBox->SetText("");
 		textBox->onTextChanged.Add(this, &Pokedex::onText);
 	}
 
 	{
-		listBox = new Gwen::Controls::ListBox(this);
+		listBox = new Gwen::Controls::ListBox(basicPage);
 		listBox->SetPos(textBox->GetPos().x, textBox->GetPos().y + textBox->Height() + 20);
-		listBox->SetSize(WINDOW_WIDTH/4, WINDOW_HEIGHT-300-5);
+		listBox->SetSize(WINDOW_WIDTH/4 - 25, tabControl->Height() - 150);
 
 		initPokemonList();
 
@@ -26,11 +39,11 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	}
 
 	{
-		int x = listBox->GetPos().x;
-		int y = listBox->GetPos().y + listBox->Height() + 10;
+		int x = 0;
+		int y = 0;
 
-		for (int i = 1; i <= pokeData.numTypes(); ++i) {
-			auto check = new Gwen::Controls::CheckBoxWithLabel(this);
+		for (size_t i = 1; i <= pokeData.numTypes(); ++i) {
+			auto check = new Gwen::Controls::CheckBoxWithLabel(advancedPage);
 			check->SetPos(x, y);
 			std::string name = pokeData.getTypeName(i);
 			check->Label()->SetText(name);
@@ -48,14 +61,14 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 
 	{
 		imgPanel= new Gwen::Controls::ImagePanel(this);
-		imgPanel->SetBounds((WINDOW_WIDTH - listBox->GetPos().x + listBox->Width())/2, 0, 200, 200);
+		imgPanel->SetBounds((WINDOW_WIDTH - tabControl->GetPos().x + tabControl->Width())/2, 0, 200, 200);
 	}
 
 	{
 		auto flavorGroup = new Gwen::Controls::GroupBox(this);
-		flavorGroup->SetSize(imgPanel->GetPos().x - 5 - (textBox->GetPos().x + textBox->Width()),
+		flavorGroup->SetSize(imgPanel->GetPos().x - 5 - (tabControl->GetPos().x + tabControl->Width()),
 							175);
-		flavorGroup->SetPos(textBox->GetPos().x + textBox->Width() + 5, 10);
+		flavorGroup->SetPos(tabControl->GetPos().x + tabControl->Width() + 5, 10);
 		flavorGroup->SetText("Description");
 		flavorGroup->SetFont(pokedexFont, mediumFont, false);
 
@@ -67,8 +80,8 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 
 	{
 		groupBox = new Gwen::Controls::GroupBox(this);
-		groupBox->SetSize(WINDOW_WIDTH - listBox->Width() - 15, WINDOW_HEIGHT - imgPanel->Height() - 10);
-		groupBox->SetPos(listBox->GetPos().x + listBox->Width() + 5,
+		groupBox->SetSize(WINDOW_WIDTH - tabControl->Width() - 15, WINDOW_HEIGHT - imgPanel->Height() - 10);
+		groupBox->SetPos(tabControl->GetPos().x + tabControl->Width() + 5,
 						 imgPanel->GetPos().y + imgPanel->Height() + 5);
 		groupBox->SetFont(pokedexFont, mediumFont, false);
 		groupBox->SetText("Stats");
@@ -148,6 +161,15 @@ void Pokedex::onTypeFilter(Gwen::Controls::Base *pControl)
 {
 	auto ctrl = static_cast<Gwen::Controls::CheckBox*>(pControl);
 	listBox->Clear();
+	if (ctrl->IsChecked()) {
+		characteristics.hasType.push_back(pokeData.getTypeID(ctrl->GetName()));
+	} else {
+		characteristics.hasType.erase(
+			std::remove(characteristics.hasType.begin(),
+						characteristics.hasType.end(),pokeData.getTypeID(ctrl->GetName())),
+			characteristics.hasType.end()
+		);
+	}
 	filterList(textBox->GetText());
 }
 

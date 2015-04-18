@@ -33,6 +33,6 @@ private:
 	Gwen::Controls::Canvas *m_gwenCanvas = nullptr;
 	Gwen::Skin::TexturedBase *m_gwenSkin = nullptr;
 	Pokedex *m_pokedexBase= nullptr;
-
+	SDL_Texture *gridTexture;
     Gwen::Input::SDL2 m_gwenInput;
 };

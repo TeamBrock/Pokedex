@@ -8,6 +8,7 @@
 #include "Gwen/Controls/ImagePanel.h"
 #include "Gwen/Controls/GroupBox.h"
 #include "Gwen/Controls/CheckBox.h"
+#include "Gwen/Controls/TabControl.h"
 
 using options::WINDOW_WIDTH;
 using options::WINDOW_HEIGHT;
@@ -31,18 +32,19 @@ public:
 	void onTypeFilter(Gwen::Controls::Base *pControl);
 	void onText(Gwen::Controls::Base *pControl);
 
+private:
+	int currentPokemon;
+
 	Gwen::Controls::ImagePanel *imgPanel;
 	Gwen::Controls::ListBox *listBox;
 	Gwen::Controls::TextBox *textBox;
 	Gwen::Controls::GroupBox* groupBox;
 	Gwen::Controls::Layout::Table* table;
 	Gwen::Controls::Label *flavorLabel;
+	Gwen::Controls::TabControl *tabControl;
 
 	PokemonData pokeData;
 	PokemonData::Characteristics characteristics;
 
-	int currentPokemon;
 	std::vector<int> pokemonFiltered;
 };
-
-
