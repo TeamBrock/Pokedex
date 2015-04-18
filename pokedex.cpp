@@ -2,6 +2,47 @@
 #include <iomanip>
 #include "pokedex.hpp"
 #include "Gwen/Controls/CollapsibleList.h"
+#include "Gwen/Controls/HorizontalSlider.h"
+
+template <typename T>
+std::string toStringWithPrecision(const T a_value, const int n = 6)
+{
+	std::ostringstream out;
+	out << std::setprecision(n) << a_value;
+	return out.str();
+}
+
+class SliderWithLabel : public Gwen::Controls::Base
+{
+public:
+	GWEN_CONTROL_INLINE(SliderWithLabel, Base)
+	{
+		SetSize(200, 30);
+		m_Slider = new Gwen::Controls::HorizontalSlider(this);
+		m_Slider->Dock(Gwen::Pos::Left);
+		m_Slider->SetMargin(Gwen::Margin(0, 2, 2, 2));
+		m_Slider->SetTabable(false);
+		m_Slider->onValueChanged.Add(this, &SliderWithLabel::onSliderChange);
+
+		m_Label = new Gwen::Controls::Label(this);
+		m_Label->Dock(Gwen::Pos::Fill);
+		m_Label->SetTabable(false);
+		SetTabable(false);
+	}
+
+	Gwen::Controls::Label *GetLabel() { return m_Label; }
+	Gwen::Controls::HorizontalSlider *GetSlider() { return m_Slider; }
+
+	void onSliderChange(Gwen::Controls::Base *ctrl)
+	{
+		auto slider = static_cast<Gwen::Controls::HorizontalSlider *>(ctrl);
+		m_Label->SetText(toStringWithPrecision(slider->GetFloatValue()));
+	}
+
+private:
+	Gwen::Controls::Label *m_Label;
+	Gwen::Controls::HorizontalSlider *m_Slider;
+};
 
 Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 		: Gwen::Controls::Base(pParent, name)
@@ -43,7 +84,7 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 		auto clearButton = new Gwen::Controls::Button(advancedPage);
 		clearButton->SetPos(0, 0);
 		clearButton->SetSize(40, 20);
-		clearButton->SetText("Clear");
+		clearButton->SetText("Reset");
 		clearButton->SetFont(pokedexFont, smallFont, false);
 		clearButton->onPress.Add(this, &Pokedex::onPressClear);
 
@@ -67,8 +108,38 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 				x += 90;
 			}
 		}
-	}
 
+		int sliderY = 200 + 30;
+
+		auto createSlider = [&](const std::string &titleStr, int min, int max, int defaultValue) -> SliderWithLabel * {
+			auto title = new Gwen::Controls::Label(advancedPage);
+			title->SetPos(0, sliderY);
+			title->SetFont(pokedexFont, smallFont, false);
+			title->SetText(titleStr);
+			title->SetSize(100, 18);
+			sliderY += title->Height() - 5;
+
+			auto sliderWithLabel = new SliderWithLabel(advancedPage);
+			auto slider = sliderWithLabel->GetSlider();
+
+			sliderWithLabel->SetPos(0, sliderY);
+			sliderWithLabel->GetLabel()->SetFont(pokedexFont, smallFont, false);
+
+			slider->SetSize(150, 20);
+			slider->SetRange(min, max);
+			slider->SetFloatValue(defaultValue);
+			slider->SetNotchCount(25);
+			slider->SetClampToNotches(true);
+
+			sliderY += slider->Height() + 10;
+
+			return sliderWithLabel;
+		};
+
+		createSlider("Min. HP", 0, 250, 10);
+		createSlider("Max. HP", 0, 250, 250);
+	}
+		
 	{
 		imgPanel = new Gwen::Controls::ImagePanel(this);
 		imgPanel->SetBounds((WINDOW_WIDTH - tabControl->Width())/2 + 100, 0, 200, 200);
@@ -92,7 +163,6 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 		groupBox->SetSize(WINDOW_WIDTH - tabControl->Width() - 35, statsTab->Height() - flavorLabel->Height() - 20);
 		groupBox->SetFont(pokedexFont, mediumFont, false);
 		groupBox->SetText("Stats");
-		groupBox->SetShouldDrawBackground(true);
 
 		table = new Gwen::Controls::Layout::Table(groupBox);
 		table->Dock(Gwen::Pos::Fill);
@@ -134,20 +204,10 @@ void Pokedex::addRow(const std::string &first, const std::string &second)
 	label2->SetWrap(true);
 }
 
-template <typename T>
-std::string toStringWithPrecision(const T a_value, const int n = 6)
-{
-	std::ostringstream out;
-	out << std::setprecision(n) << a_value;
-	return out.str();
-}
-
 void Pokedex::setPokemon(int id)
 {
 	pokeData.setPokemon(id);
-	if (pokeData.getTypesWeakTo().size()) {
-		std::cout << "has types weak to\n";
-	}
+	pokeData.setType(pokeData.getTypeID1(), pokeData.getTypeID2());
 
 	imgPanel->SetImage(pokeData.getSpriteLocation());
 	flavorLabel->SetText(pokeData.getFlavorText());
@@ -155,7 +215,6 @@ void Pokedex::setPokemon(int id)
 
 	addRow("Height", toStringWithPrecision(pokeData.getHeight(), 6));
 	addRow("Weight", toStringWithPrecision(pokeData.getWeight(), 6));
-
 	addRow("Base HP", std::to_string(pokeData.getBaseHP()));
 	addRow("Base Attk", std::to_string(pokeData.getBaseAtt()));
 	addRow("Base Sp. Attk", std::to_string(pokeData.getBaseSpAtt()));
@@ -197,27 +256,27 @@ void Pokedex::setPokemon(int id)
 	processType(strDamagedNormallyBy, typesDamagedNormallyBy, pokeData);
 
 	if (strWeakTo.size()) {
-		addRow("Types weak to", strWeakTo);
+		addRow("Weak to", strWeakTo);
 	}
 
 	if (strDoubleWeakTo.size()) {
-		addRow("Types double weak to", strDoubleWeakTo);
+		addRow("Double weak to", "Test");
 	}
 
 	if (strResistantTo.size()) {
-		addRow("Types resistant to", strResistantTo);
+		addRow("Resistant to", strResistantTo);
 	}
 
 	if (strDoubleResistantTo.size()) {
-		addRow("Types double resistant to", strDoubleResistantTo);
+		addRow("Double resistant to", strDoubleResistantTo);
 	}
 
 	if (strImmuneTo.size()) {
-		addRow("Types immune to", strImmuneTo);
+		addRow("Immune to", strImmuneTo);
 	}
 
 	if (strDamagedNormallyBy.size()) {
-		addRow("Types damaged normally by", strDamagedNormallyBy);
+		addRow("Damaged normally by", strDamagedNormallyBy);
 	}
 }
 
