@@ -32,6 +32,7 @@ public:
 	void onTypeFilter(Gwen::Controls::Base *pControl);
 	void onText(Gwen::Controls::Base *pControl);
 	void onPressClear(Gwen::Controls::Base *);
+	void onSliderChange(Gwen::Controls::Base *);
 
 private:
 	int currentPokemon;

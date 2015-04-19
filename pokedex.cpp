@@ -3,6 +3,7 @@
 #include "pokedex.hpp"
 #include "Gwen/Controls/CollapsibleList.h"
 #include "Gwen/Controls/HorizontalSlider.h"
+#include "Gwen/Controls/ScrollControl.h"
 
 template <typename T>
 std::string toStringWithPrecision(const T a_value, const int n = 6)
@@ -52,14 +53,16 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	{
 		tabControl = new Gwen::Controls::TabControl(this);
 		int y = 80;
-		tabControl->SetBounds(5, y, WINDOW_WIDTH/4, WINDOW_HEIGHT - y - 5);
+		tabControl->SetBounds(5, y, WINDOW_WIDTH/3.8, WINDOW_HEIGHT - y - 5);
 	}
 
 	Gwen::Controls::TabButton* basicButton = tabControl->AddPage("Basic");
 	Gwen::Controls::TabButton* advancedButton = tabControl->AddPage("Advanced");
-
 	Gwen::Controls::Base* basicPage = basicButton->GetPage();
 	Gwen::Controls::Base* advancedPage = advancedButton->GetPage();
+
+	Gwen::Controls::ScrollControl* advScroll = new Gwen::Controls::ScrollControl(advancedPage);
+	advScroll->Dock(Gwen::Pos::Fill);
 
 	{
 		textBox = new Gwen::Controls::TextBox(basicPage);
@@ -81,7 +84,7 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	}
 
 	{
-		auto clearButton = new Gwen::Controls::Button(advancedPage);
+		auto clearButton = new Gwen::Controls::Button(advScroll);
 		clearButton->SetPos(0, 0);
 		clearButton->SetSize(40, 20);
 		clearButton->SetText("Reset");
@@ -94,7 +97,7 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 		int y = initialY;
 
 		for (size_t i = 1; i <= pokeData.numTypes(); ++i) {
-			auto check = new Gwen::Controls::CheckBoxWithLabel(advancedPage);
+			auto check = new Gwen::Controls::CheckBoxWithLabel(advScroll);
 			typeCheckBoxes.push_back(check);
 			check->SetPos(x, y);
 			std::string name = pokeData.getTypeName(i);
@@ -111,33 +114,64 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 
 		int sliderY = 200 + 30;
 
-		auto createSlider = [&](const std::string &titleStr, int min, int max, int defaultValue) -> SliderWithLabel * {
-			auto title = new Gwen::Controls::Label(advancedPage);
+		std::vector<SliderWithLabel *> sliders;
+		sliders.reserve(16);
+
+		auto createSlider = [&](const std::string &titleStr,
+								float min,
+								float max,
+								float defaultValue)
+		{
+			auto title = new Gwen::Controls::Label(advScroll);
 			title->SetPos(0, sliderY);
 			title->SetFont(pokedexFont, smallFont, false);
 			title->SetText(titleStr);
 			title->SetSize(100, 18);
 			sliderY += title->Height() - 5;
 
-			auto sliderWithLabel = new SliderWithLabel(advancedPage);
+			auto sliderWithLabel = new SliderWithLabel(advScroll);
 			auto slider = sliderWithLabel->GetSlider();
 
 			sliderWithLabel->SetPos(0, sliderY);
 			sliderWithLabel->GetLabel()->SetFont(pokedexFont, smallFont, false);
 
 			slider->SetSize(150, 20);
-			slider->SetRange(min, max);
+			slider->SetRange(min, max + 10);
 			slider->SetFloatValue(defaultValue);
-			slider->SetNotchCount(25);
-			slider->SetClampToNotches(true);
+			slider->SetNotchCount(max);
+			slider->SetName(titleStr);
 
 			sliderY += slider->Height() + 10;
-
-			return sliderWithLabel;
+			sliders.push_back(sliderWithLabel);
 		};
 
 		createSlider("Min. HP", 0, 250, 10);
 		createSlider("Max. HP", 0, 250, 250);
+
+		createSlider("Min. Attk", 5, 134, 5);
+		createSlider("Max. Attk", 5, 134, 134);
+
+		createSlider("Min. Def", 5, 180, 5);
+		createSlider("Max. Def", 5, 180, 180);
+
+		createSlider("Min. Sp. Attk", 15, 154, 15);
+		createSlider("Max. Sp. Attk", 15, 154, 154);
+
+		createSlider("Min. Sp. Def", 20, 125, 20);
+		createSlider("Max. Sp. Def", 20, 125, 125);
+
+		createSlider("Min. Speed", 15, 140, 15);
+		createSlider("Max. Speed", 15, 140, 140);
+
+		createSlider("Min. Height", 0.2, 8.8, 0.2);
+		createSlider("Max. Height", 0.2, 8.8, 8.8);
+
+		createSlider("Min. Weight", 0.1, 460, 0.1);
+		createSlider("Max. Weight", 0.1, 460, 460);
+
+		for (auto slider : sliders) {
+			slider->GetSlider()->onValueChanged.Add(this, &Pokedex::onSliderChange);
+		}
 	}
 		
 	{
@@ -146,8 +180,10 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 	}
 
 	auto statsTab = new Gwen::Controls::TabControl(this);
-	statsTab->SetSize(WINDOW_WIDTH - tabControl->Width() - 15, WINDOW_HEIGHT - imgPanel->Height() - 10);
-	statsTab->SetPos(tabControl->GetPos().x + tabControl->Width() + 5, imgPanel->GetPos().y + imgPanel->Height() + 5);
+	statsTab->SetSize(WINDOW_WIDTH - tabControl->Width() - 15,
+			WINDOW_HEIGHT - imgPanel->Height() - 10);
+	statsTab->SetPos(tabControl->GetPos().x + tabControl->Width() + 5,
+			imgPanel->GetPos().y + imgPanel->Height() + 5);
 
 	{
 		flavorLabel = new Gwen::Controls::Label(statsTab);
@@ -332,4 +368,47 @@ void Pokedex::onPressClear(Gwen::Controls::Base *)
 	for (auto check : typeCheckBoxes) {
 		check->Checkbox()->SetChecked(false);
 	}
+}
+
+void Pokedex::onSliderChange(Gwen::Controls::Base *ctrl)
+{
+	auto slider = static_cast<Gwen::Controls::Slider *>(ctrl);
+	std::string name = ctrl->GetName();
+	if (name == "Min. HP") {
+		characteristics.baseHPMin = slider->GetFloatValue();
+	} else if (name == "Max. HP") {
+		characteristics.baseHPMax = slider->GetFloatValue();
+	} else if (name == "Min. Attk") {
+		characteristics.baseAttMin = slider->GetFloatValue();
+	} else if (name == "Max. Attk") {
+		characteristics.baseAttMax = slider->GetFloatValue();
+	} else if (name == "Min. Def") {
+		characteristics.baseDefMin= slider->GetFloatValue();
+	} else if (name == "Max. Def") {
+		characteristics.baseDefMax = slider->GetFloatValue();
+	} else if (name == "Min. Sp. Attk") {
+		characteristics.baseSpAttMin = slider->GetFloatValue();
+	} else if (name == "Max. Sp. Attk") {
+		characteristics.baseSpAttMax = slider->GetFloatValue();
+	} else if (name == "Min. Sp. Def") {
+		characteristics.baseSpDefMin = slider->GetFloatValue();
+	} else if (name == "Max. Sp. Def") {
+		characteristics.baseSpDefMax = slider->GetFloatValue();
+	} else if (name == "Min. Speed") {
+		characteristics.baseSpeedMin= slider->GetFloatValue();
+	} else if (name == "Max. Speed") {
+		characteristics.baseSpeedMax = slider->GetFloatValue();
+	} else if (name == "Min. Height") {
+		characteristics.heightMin = slider->GetFloatValue();
+	} else if (name == "Max. Height") {
+		characteristics.heightMax = slider->GetFloatValue();
+	} else if (name == "Min. Weight") {
+		characteristics.weightMin = slider->GetFloatValue();
+	} else if (name == "Max. Weight") {
+		characteristics.weightMax = slider->GetFloatValue();
+	}
+
+	listBox->Clear();
+	initPokemonList();
+	setPokemon(currentPokemon);
 }
