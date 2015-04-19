@@ -2,8 +2,6 @@
 #include <iomanip>
 #include "pokedex.hpp"
 #include "Gwen/Controls/CollapsibleList.h"
-#include "Gwen/Controls/HorizontalSlider.h"
-#include "Gwen/Controls/ScrollControl.h"
 
 template <typename T>
 std::string toStringWithPrecision(const T a_value, const int n = 6)
@@ -113,8 +111,6 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 		}
 
 		int sliderY = 200 + 30;
-
-		std::vector<SliderWithLabel *> sliders;
 		sliders.reserve(16);
 
 		auto createSlider = [&](const std::string &titleStr,
@@ -142,7 +138,7 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 			slider->SetName(titleStr);
 
 			sliderY += slider->Height() + 10;
-			sliders.push_back(sliderWithLabel);
+			sliders.push_back(sliderWithLabel->GetSlider());
 		};
 
 		createSlider("Min. HP", 0, 250, 10);
@@ -170,7 +166,7 @@ Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
 		createSlider("Max. Weight", 0.1, 460, 460);
 
 		for (auto slider : sliders) {
-			slider->GetSlider()->onValueChanged.Add(this, &Pokedex::onSliderChange);
+			slider->onValueChanged.Add(this, &Pokedex::onSliderChange);
 		}
 	}
 		
@@ -360,13 +356,50 @@ void Pokedex::filterList(const std::string &query)
 	characteristics.nameStartsWith = query;
 	initPokemonList();
 	setPokemon(currentPokemon);
-	//listBox->SelectByString(pokeData.getName());
 }
 
 void Pokedex::onPressClear(Gwen::Controls::Base *)
 {
 	for (auto check : typeCheckBoxes) {
 		check->Checkbox()->SetChecked(false);
+	}
+
+	for (auto slider : sliders) {
+		std::string name = slider->GetName();
+
+		if (name == "Min. HP") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. HP") {
+			slider->SetFloatValue(slider->GetMax());
+		} else if (name == "Min. Attk") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. Attk") {
+			slider->SetFloatValue(slider->GetMax());
+		} else if (name == "Min. Def") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. Def") {
+			slider->SetFloatValue(slider->GetMax());
+		} else if (name == "Min. Sp. Attk") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. Sp. Attk") {
+			slider->SetFloatValue(slider->GetMax());
+		} else if (name == "Min. Sp. Def") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. Sp. Def") {
+			slider->SetFloatValue(slider->GetMax());
+		} else if (name == "Min. Speed") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. Speed") {
+			slider->SetFloatValue(slider->GetMax());
+		} else if (name == "Min. Height") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. Height") {
+			slider->SetFloatValue(slider->GetMax());
+		} else if (name == "Min. Weight") {
+			slider->SetFloatValue(slider->GetMin());
+		} else if (name == "Max. Weight") {
+			slider->SetFloatValue(slider->GetMax());
+		}
 	}
 }
 
@@ -409,6 +442,7 @@ void Pokedex::onSliderChange(Gwen::Controls::Base *ctrl)
 	}
 
 	listBox->Clear();
+	characteristics.nameStartsWith = textBox->GetText();
 	initPokemonList();
 	setPokemon(currentPokemon);
 }

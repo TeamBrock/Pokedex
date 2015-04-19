@@ -9,6 +9,8 @@
 #include "Gwen/Controls/GroupBox.h"
 #include "Gwen/Controls/CheckBox.h"
 #include "Gwen/Controls/TabControl.h"
+#include "Gwen/Controls/ScrollControl.h"
+#include "Gwen/Controls/HorizontalSlider.h"
 
 using options::WINDOW_WIDTH;
 using options::WINDOW_HEIGHT;
@@ -48,6 +50,7 @@ private:
 	PokemonData pokeData;
 	PokemonData::Characteristics characteristics;
 
+	std::vector<Gwen::Controls::HorizontalSlider *> sliders;
 	std::vector<Gwen::Controls::CheckBoxWithLabel *> typeCheckBoxes;
 	std::vector<int> pokemonFiltered;
 };
