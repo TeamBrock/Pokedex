@@ -23,7 +23,7 @@ bool RenderContext::initalizeSDL()
 	}
 
 	window = SDL_CreateWindow(
-			"Pokedex",
+			"Pokédex",
 			SDL_WINDOWPOS_CENTERED,
 			SDL_WINDOWPOS_CENTERED,
 			options::WINDOW_WIDTH,

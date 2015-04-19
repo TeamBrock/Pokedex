@@ -78,6 +78,8 @@ bool HomeScreen::initialize(RenderContext *context, ScreenDispatcher *dispatcher
 void HomeScreen::onEnter()
 {
 	SDL_SetRenderDrawColor(m_context->renderer, 75, 67, 142, 255);
+	m_dexDance = false;
+	m_pokedexSprite.setAngle(0);
 }
 
 void HomeScreen::handleEvent(const SDL_Event &sdlEvent)

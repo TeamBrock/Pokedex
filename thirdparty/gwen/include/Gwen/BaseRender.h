@@ -56,15 +56,15 @@ namespace Gwen
             virtual void Begin()        {}
             virtual void End()          {}
 
-            virtual void SetDrawColor(Color color)          {}
+			virtual void SetDrawColor(Color)          {}
 
-            virtual void DrawFilledRect(Gwen::Rect rect)    {}
+            virtual void DrawFilledRect(Gwen::Rect)    {}
 
             virtual void StartClip()    {}
             virtual void EndClip()      {}
 
-            virtual void LoadTexture(Gwen::Texture* pTexture)   {}
-            virtual void FreeTexture(Gwen::Texture* pTexture)   {}
+            virtual void LoadTexture(Gwen::Texture*)   {}
+            virtual void FreeTexture(Gwen::Texture*)   {}
 
             virtual void DrawTexturedRect(Gwen::Texture*, Gwen::Rect, float, float, float, float)
             {}
@@ -73,8 +73,7 @@ namespace Gwen
 
             virtual Gwen::Color PixelColour(Gwen::Texture*,
                                             unsigned int, unsigned int,
-                                            const Gwen::Color& col_default =
-                                                                    Gwen::Color(255,255,255,255))
+                                            const Gwen::Color& col_default = Gwen::Color(255,255,255,255))
             {
                 return col_default;
             }

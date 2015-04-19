@@ -72,7 +72,7 @@ namespace Gwen
             }
 
             virtual void DelayedDelete();
-            virtual void PreDelete(Gwen::Skin::Base* skin)
+            virtual void PreDelete(Gwen::Skin::Base*)
             {
             }
 
@@ -576,7 +576,7 @@ namespace Gwen
                 return ident;
             }
 
-            virtual Gwen::Controls::Base* DynamicCast(const char* Variable)
+            virtual Gwen::Controls::Base* DynamicCast(const char*)
             {
                 return NULL;
             }
@@ -599,9 +599,9 @@ namespace Gwen
             {
             }
 
-            virtual void SetAction(Event::Handler* pObject,
-                                   Handler::FunctionWithInformation pFunction,
-                                   const Gwen::Event::Packet& packet)
+            virtual void SetAction(Event::Handler*,
+                                   Handler::FunctionWithInformation,
+                                   const Gwen::Event::Packet&)
             {
             }
 
