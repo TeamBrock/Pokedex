@@ -33,6 +33,8 @@ private:
 	SDL_Texture *m_textTexture = nullptr;
 
 	SpriteButton *m_snapButton;
+	SpriteButton *m_quizButton;
+
 	Sprite m_pokedexSprite;
 	Sprite m_cartridgePokemonSnap;
 	Sprite m_cartridgeQuiz;

@@ -23,7 +23,17 @@ public:
 		m_rect = sprite.rect();
 	}
 
-	bool clicked(imgui::UIState &uiState) {
+	bool clicked(imgui::UIState &uiState, unsigned long elapsedMS) {
+		float deltaS = static_cast<float>(elapsedMS - lastTime)/1000.0f;
+		lastTime = elapsedMS;
+
+		if (m_dance) {
+			m_sprite.setAngle(5.0f*cos(static_cast<float>(elapsedMS/100.0f)));
+		} else if (m_sprite.angle() != 0) {
+			float angle = m_sprite.angle();
+			m_sprite.setAngle(angle + (0 - angle) * 10.0f * deltaS);
+		}
+
 		if (uiState.mouseOverSprite(m_sprite)) {
 			m_dance = true;
 		} else {
@@ -48,6 +58,7 @@ public:
 	}
 
 private:
+	unsigned long lastTime = 0;
 	bool m_dance = false;
 	bool m_active = false;
 	Sprite &m_sprite;
@@ -92,6 +103,8 @@ bool HomeScreen::initialize(RenderContext *context, ScreenDispatcher *dispatcher
 		SDL_Rect cartridgeRect = m_cartridgeQuiz.rect();
 		SDL_Rect dexRect = m_pokedexSprite.rect();
 		m_cartridgeQuiz.setPosition((dexRect.w + (2*cartridgeRect.w+10))/2 + dexRect.x - cartridgeRect.w/2, dexRect.y + dexRect.h + 35);
+
+		m_quizButton = new SpriteButton(m_cartridgeQuiz);
 	}
 
 	// Pokeball sprite
@@ -189,8 +202,12 @@ void HomeScreen::frameStep(unsigned long elapsedMS)
 		m_screenDispatcher->setToPokedexScreen();	
 	}
 
-	if (m_snapButton->clicked(m_userInterface)) {
+	if (m_snapButton->clicked(m_userInterface, elapsedMS)) {
 		m_screenDispatcher->setToSnapScreen();	
+	}
+
+	if (m_quizButton->clicked(m_userInterface, elapsedMS)) {
+		m_screenDispatcher->setToQuizScreen();	
 	}
 
 	// Render image screen elements
