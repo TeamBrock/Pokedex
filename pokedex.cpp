@@ -44,7 +44,7 @@ private:
 };
 
 Pokedex::Pokedex(Gwen::Controls::Base *pParent, const Gwen::String& name)
-		: Gwen::Controls::Base(pParent, name)
+		: Gwen::Controls::Base(pParent, name), gwenSmallFont(nullptr)
 {
 	SetSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -231,8 +231,13 @@ void Pokedex::addRow(const std::string &first, const std::string &second)
 	auto label2 = row->GetCellContents(1);
 
 	label1->SetWrap(true);
-	label1->SetFont(pokedexFont, smallFont, false);
-	label2->SetFont(pokedexFont, smallFont, false);
+	if (!gwenSmallFont) {
+		label1->SetFont(pokedexFont, smallFont, false);
+		gwenSmallFont = label1->GetFont();
+	} else {
+		label1->SetFont(gwenSmallFont);
+	}
+	label2->SetFont(gwenSmallFont);
 	label2->SetWrap(true);
 }
 
@@ -247,12 +252,12 @@ void Pokedex::setPokemon(int id)
 
 	addRow("Height", toStringWithPrecision(pokeData.getHeight(), 6));
 	addRow("Weight", toStringWithPrecision(pokeData.getWeight(), 6));
-	addRow("Base HP", std::to_string(pokeData.getBaseHP()));
-	addRow("Base Attk", std::to_string(pokeData.getBaseAtt()));
-	addRow("Base Sp. Attk", std::to_string(pokeData.getBaseSpAtt()));
-	addRow("Base Def", std::to_string(pokeData.getBaseDef()));
-	addRow("Base Sp. Def", std::to_string(pokeData.getBaseSpDef()));
-	addRow("Base Sp. Def", std::to_string(pokeData.getBaseSpDef()));
+	addRow("Hit Points", std::to_string(pokeData.getBaseHP()));
+	addRow("Attack", std::to_string(pokeData.getBaseAtt()));
+	addRow("Special Attack", std::to_string(pokeData.getBaseSpAtt()));
+	addRow("Defense", std::to_string(pokeData.getBaseDef()));
+	addRow("Special Defense", std::to_string(pokeData.getBaseSpDef()));
+	addRow("Speed", std::to_string(pokeData.getBaseSpeed()));
 
 	std::vector<int> typesWeakTo = pokeData.getTypesWeakTo();
 	std::vector<int> typesDoubleWeakTo = pokeData.getTypesDoubleWeakTo();
@@ -292,7 +297,7 @@ void Pokedex::setPokemon(int id)
 	}
 
 	if (strDoubleWeakTo.size()) {
-		addRow("Double weak to", "Test");
+		addRow("Double weak to", strDoubleWeakTo);
 	}
 
 	if (strResistantTo.size()) {
@@ -312,10 +317,30 @@ void Pokedex::setPokemon(int id)
 	}
 }
 
+void Pokedex::setMissingNo()
+{
+	std::cout << "Called";
+	imgPanel->SetImage("assets/sprites/missingno.png");
+	flavorLabel->SetText("This Pokemon, long thought to be a myth, is actually the" \
+						 " combined form of all Pokemon the Alpha Pokemon deemed not worthy to" \
+						 " exist.  Only by witnessing a chain of seemingly random events can one" \
+						 " encounter this legendary creature.");
+	table->Clear();
+
+	addRow("Height", "????");
+	addRow("Weight", "????");
+	addRow("Hit Points", "????");
+	addRow("Attack", "????");
+	addRow("Special Attack", "????");
+	addRow("Defense", "????");
+	addRow("Special Defense", "????");
+	addRow("Speed", "????");
+}
+
 void Pokedex::onRowSelected(Gwen::Controls::Base* pControl)
 {
 	Gwen::Controls::ListBox* ctrl = (Gwen::Controls::ListBox*)pControl;
-	std::string name = ctrl->GetSelectedRow()->GetText(0);;
+	std::string name = ctrl->GetSelectedRow()->GetText(0);
 
 	for (const auto &id : pokemonFiltered) {
 		pokeData.setPokemon(id);
@@ -355,7 +380,11 @@ void Pokedex::filterList(const std::string &query)
 {
 	characteristics.nameStartsWith = query;
 	initPokemonList();
-	setPokemon(currentPokemon);
+	if (pokemonFiltered.size()) {
+		setPokemon(currentPokemon);
+	} else {
+		setMissingNo();
+	}
 }
 
 void Pokedex::onPressClear(Gwen::Controls::Base *)
@@ -444,5 +473,9 @@ void Pokedex::onSliderChange(Gwen::Controls::Base *ctrl)
 	listBox->Clear();
 	characteristics.nameStartsWith = textBox->GetText();
 	initPokemonList();
-	setPokemon(currentPokemon);
+	if (pokemonFiltered.size()) {
+		setPokemon(currentPokemon);
+	} else {
+		setMissingNo();
+	}
 }

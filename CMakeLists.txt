@@ -45,6 +45,7 @@ ADD_EXECUTABLE(
 	texture.cpp
 	PokemonData.cpp
 	screen_dispatcher.cpp
+	snap_screen.cpp
 )
 
 TARGET_LINK_LIBRARIES(

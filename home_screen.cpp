@@ -15,6 +15,57 @@
 using options::WINDOW_WIDTH;
 using options::WINDOW_HEIGHT;
 
+
+class SpriteButton {
+public:
+	SpriteButton(Sprite &sprite) : m_sprite(sprite)
+	{
+		m_rect = sprite.rect();
+	}
+
+	bool clicked(imgui::UIState &uiState, unsigned long elapsedMS) {
+		float deltaS = static_cast<float>(elapsedMS - lastTime)/1000.0f;
+		lastTime = elapsedMS;
+
+		if (m_dance) {
+			m_sprite.setAngle(5.0f*cos(static_cast<float>(elapsedMS/100.0f)));
+		} else if (m_sprite.angle() != 0) {
+			float angle = m_sprite.angle();
+			m_sprite.setAngle(angle + (0 - angle) * 10.0f * deltaS);
+		}
+
+		if (uiState.mouseOverSprite(m_sprite)) {
+			m_dance = true;
+		} else {
+			m_dance = false;
+		}
+
+		if (uiState.mouseOverSprite(m_sprite) && uiState.mouseDown) {
+			m_sprite.setScale(2);
+			SDL_Rect rect = m_sprite.rect();
+			m_sprite.setPosition(m_rect.x + rect.w/4, m_rect.y + rect.h/4);
+			m_active = true;
+		} else if (!m_active) {
+			m_sprite.setScale(3);
+			m_sprite.setPosition(m_rect.x, m_rect.y);
+		}
+
+		if (m_active && !uiState.mouseDown) {
+			m_active = false;
+		}
+
+		return uiState.clickedSprite(3, m_sprite);
+	}
+
+private:
+	unsigned long lastTime = 0;
+	bool m_dance = false;
+	bool m_active = false;
+	Sprite &m_sprite;
+	SDL_Rect m_rect;
+};
+
+
 bool HomeScreen::initialize(RenderContext *context, ScreenDispatcher *dispatcher)
 {
 	m_textDest.x = 0; m_textDest.y = 0; m_textDest.w = 0; m_textDest.h = 0;
@@ -37,21 +88,23 @@ bool HomeScreen::initialize(RenderContext *context, ScreenDispatcher *dispatcher
 	// Pokemon Snap Cartridge sprite
 	{
 		m_cartridgePokemonSnap.setImage(context->loadTexture("assets/cartridge.png"));
-		m_cartridgePokemonSnap.setScale(2);
+		m_cartridgePokemonSnap.setScale(3);
 		SDL_Rect cartridgeRect = m_cartridgePokemonSnap.rect();
 		SDL_Rect dexRect = m_pokedexSprite.rect();
-		m_cartridgePokemonSnap.setPosition((dexRect.w - (2*cartridgeRect.w+10))/2 + dexRect.x,
-				dexRect.y + dexRect.h + 15);
+		m_cartridgePokemonSnap.setPosition((dexRect.w - (2*cartridgeRect.w+10))/2 + dexRect.x - cartridgeRect.w/2, dexRect.y + dexRect.h + 35);
+
+		m_snapButton = new SpriteButton(m_cartridgePokemonSnap);
 	}
 
 	// Quiz Cartridge sprite
 	{
 		m_cartridgeQuiz.setImage(context->loadTexture("assets/cartridge.png"));
-		m_cartridgeQuiz.setScale(2);
+		m_cartridgeQuiz.setScale(3);
 		SDL_Rect cartridgeRect = m_cartridgeQuiz.rect();
 		SDL_Rect dexRect = m_pokedexSprite.rect();
-		m_cartridgeQuiz.setPosition(m_cartridgePokemonSnap.rect().x + cartridgeRect.w + 10,
-				dexRect.y + dexRect.h + 15);
+		m_cartridgeQuiz.setPosition((dexRect.w + (2*cartridgeRect.w+10))/2 + dexRect.x - cartridgeRect.w/2, dexRect.y + dexRect.h + 35);
+
+		m_quizButton = new SpriteButton(m_cartridgeQuiz);
 	}
 
 	// Pokeball sprite
@@ -147,6 +200,14 @@ void HomeScreen::frameStep(unsigned long elapsedMS)
 
 	if (m_userInterface.clickedSprite(2, m_pokedexSprite)) {
 		m_screenDispatcher->setToPokedexScreen();	
+	}
+
+	if (m_snapButton->clicked(m_userInterface, elapsedMS)) {
+		m_screenDispatcher->setToSnapScreen();	
+	}
+
+	if (m_quizButton->clicked(m_userInterface, elapsedMS)) {
+		m_screenDispatcher->setToQuizScreen();	
 	}
 
 	// Render image screen elements
