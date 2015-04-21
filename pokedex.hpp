@@ -17,8 +17,8 @@ using options::WINDOW_HEIGHT;
 
 const char pokedexFont[] = "assets/DroidSansMono.ttf";
 const int bigFont = 18;
-const int mediumFont = 16;
-const int smallFont = 12;
+const int mediumFont = 14;
+const int smallFont = 10;
 
 class Pokedex : public Gwen::Controls::Base
 {
@@ -29,6 +29,7 @@ public:
 	void initPokemonList();
 	void addRow(const std::string &first, const std::string &second);
 	void setPokemon(int id);
+	void setMissingNo();
 	void filterList(const std::string &query);
     void onRowSelected(Gwen::Controls::Base* pControl);
 	void onTypeFilter(Gwen::Controls::Base *pControl);
@@ -46,6 +47,8 @@ private:
 	Gwen::Controls::Layout::Table* table;
 	Gwen::Controls::Label *flavorLabel;
 	Gwen::Controls::TabControl *tabControl;
+
+	Gwen::Font *gwenSmallFont;
 
 	PokemonData pokeData;
 	PokemonData::Characteristics characteristics;
