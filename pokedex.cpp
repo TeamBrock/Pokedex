@@ -319,7 +319,6 @@ void Pokedex::setPokemon(int id)
 
 void Pokedex::setMissingNo()
 {
-	std::cout << "Called";
 	imgPanel->SetImage("assets/sprites/missingno.png");
 	flavorLabel->SetText("This Pokemon, long thought to be a myth, is actually the" \
 						 " combined form of all Pokemon the Alpha Pokemon deemed not worthy to" \
