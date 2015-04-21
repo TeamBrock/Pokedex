@@ -14,6 +14,9 @@ public:
 
 	bool initialize();
 	void setToPokedexScreen();
+	void setToSnapScreen();	
+	void setToQuizScreen();	
+
 	void tick();
 	void switchScreen(unsigned int id);
 

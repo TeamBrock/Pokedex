@@ -8,6 +8,9 @@
 #include "imgui.hpp"
 #include "sprite.hpp"
 
+
+class SpriteButton;
+
 class HomeScreen : public Screen {
 public:
 	HomeScreen() :
@@ -29,8 +32,8 @@ private:
 	TTF_Font *m_font = nullptr;
 	SDL_Texture *m_textTexture = nullptr;
 
+	SpriteButton *m_snapButton;
 	Sprite m_pokedexSprite;
-
 	Sprite m_cartridgePokemonSnap;
 	Sprite m_cartridgeQuiz;
 	Sprite m_pokeball;
